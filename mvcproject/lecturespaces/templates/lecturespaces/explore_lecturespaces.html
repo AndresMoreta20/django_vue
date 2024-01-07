@@ -1,0 +1,7 @@
+<!-- lecturespaces/templates/lecturespaces/explore_lecturespaces.html -->
+<h1>Explore Lecturespaces</h1>
+<ul>
+  {% for lecturespace in lecturespaces %}
+    <li><a href="{% url 'lecturespace_detail' lecturespace.id %}">{{ lecturespace.title }}</a></li>
+  {% endfor %}
+</ul>

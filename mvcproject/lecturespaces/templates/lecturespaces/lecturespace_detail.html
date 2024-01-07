@@ -1,0 +1,37 @@
+<!-- lecturespaces/templates/lecturespaces/lecturespace_detail.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ lecturespace.title }}</title>
+    <!-- Include any CSS or JS here -->
+</head>
+<body>
+    <h1>{{ lecturespace.title }}</h1>
+    <p><strong>Created by:</strong> {{ lecturespace.created_by.username }}</p>
+    <p><strong>Created at:</strong> {{ lecturespace.created_at }}</p>
+    <p><strong>YouTube URL:</strong> <a href="{{ lecturespace.youtube_url }}">{{ lecturespace.youtube_url }}</a></p>
+    <p><strong>Tags:</strong> 
+        {% for tag in lecturespace.tags.all %}
+            {{ tag.name }}
+            {% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </p>
+
+    <h2>Flashcards</h2>
+    <ul>
+        {% for flashcard in lecturespace.flashcards.all %}
+            <li>
+                <h3>{{ flashcard.title }}</h3>
+                <p>{{ flashcard.content }}</p>
+                <p>Likes: {{ flashcard.likes }}, Dislikes: {{ flashcard.dislikes }}</p>
+                <!-- Here you can add like/dislike buttons or links -->
+            </li>
+        {% empty %}
+            <li>No flashcards available.</li>
+        {% endfor %}
+    </ul>
+    
+    <!-- Add other details or features you want to include, such as a comment section or related Lecturespaces -->
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!-- lecturespaces/templates/lecturespaces/user_dashboard.html -->
+<h1>User Dashboard</h1>
+<h2>Saved Lecturespaces</h2>
+<ul>
+  {% for lecturespace in saved_lecturespaces %}
+    <li><a href="{% url 'lecturespace_detail' lecturespace.id %}">{{ lecturespace.title }}</a></li>
+  {% empty %}
+    <li>No saved lecturespaces.</li>
+  {% endfor %}
+</ul>
+<!-- Add similar structure for saved flashcards -->
+<h2>Saved flashcards</h2>
+<ul>
+  {% for flashcard in saved_flashcards %}
+    <li><a href="{% url 'flashcard_detail' flashcard.id %}">{{ flashcard.title }}</a></li>
+  {% empty %}
+    <li>No saved flashcard.</li>
+  {% endfor %}
+</ul>
