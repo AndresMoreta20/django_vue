@@ -1,3 +1,8 @@
 from django.contrib import admin
+from .models import Tag, Lecturespace, Flashcard, UserSavedLecturespace, UserSavedFlashcard
 
-# Register your models here.
+admin.site.register(Tag)
+admin.site.register(Lecturespace)
+admin.site.register(Flashcard)
+admin.site.register(UserSavedLecturespace)
+admin.site.register(UserSavedFlashcard)
