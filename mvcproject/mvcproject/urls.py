@@ -21,7 +21,7 @@ from django.contrib.auth import views as auth_views
 from lecturespaces.views import signup
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls, name='admin'),
     path('lecturespaces/', include('lecturespaces.urls')),
     path('', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),

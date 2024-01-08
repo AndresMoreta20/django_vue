@@ -5,6 +5,7 @@ from .views import create_and_save_flashcard, save_flashcard, save_lecturespace,
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('login/', views.login, name='login'),
     path('dashboard/', views.user_dashboard, name='user_dashboard'),
     path('create/', views.create_lecturespace, name='create_lecturespace'),
     path('explore/', views.explore_lecturespaces, name='explore_lecturespaces'),

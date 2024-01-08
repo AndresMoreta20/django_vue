@@ -1,3 +1,4 @@
+from collections import Counter
 import os
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -22,13 +23,31 @@ def index(request):
 
 @login_required
 def user_dashboard(request):
+    # Fetch saved Lecturespaces and Flashcards
     saved_lecturespaces = UserSavedLecturespace.objects.filter(user=request.user)
     saved_flashcards = UserSavedFlashcard.objects.filter(user=request.user)
+
+    # Extract tags from saved Lecturespaces
+    tag_list = [tag.name for saved_ls in saved_lecturespaces for tag in saved_ls.lecturespace.tags.all()]
+    
+    # Find the most common tags
+    most_common_tags = Counter(tag_list).most_common()
+    
+    # Get recommended Lecturespaces based on the most common tag
+    recommended_lecturespaces = []
+    if most_common_tags:
+        most_common_tag = most_common_tags[0][0]
+        recommended_lecturespaces = Lecturespace.objects.filter(
+            tags__name=most_common_tag
+        ).exclude(
+            id__in=[saved_ls.lecturespace.id for saved_ls in saved_lecturespaces]
+        ).distinct()[:10]  # Limit to 10 recommendations, adjust as needed
+
     return render(request, 'lecturespaces/user_dashboard.html', {
         'saved_lecturespaces': saved_lecturespaces,
-        'saved_flashcards': saved_flashcards
+        'saved_flashcards': saved_flashcards,
+        'recommended_lecturespaces': recommended_lecturespaces
     })
-
 
 @login_required
 def create_lecturespace(request):
@@ -67,66 +86,6 @@ def create_lecturespace(request):
 
     return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
 
-'''
-            for _ in range(5):
-                title, content = create_flashcard_based_on_availability(None, lecturespace.title)
-                if title and content:
-                    Flashcard.objects.create(lecturespace=lecturespace, title=title, content=content)
-
-            return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
-    else:
-        form = LecturespaceForm()
-
-    return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
-
-
-@login_required
-def create_lecturespace(request):
-    """
-    View for creating a new Lecturespace. Handles form submission and
-    fetches video details using the YouTube API.
-
-    :param request: The HTTP request object.
-    :return: The rendered response.
-    """
-    if request.method == 'POST':
-        form = LecturespaceForm(request.POST)
-        if form.is_valid():
-            lecturespace = form.save(commit=False)
-            lecturespace.created_by = request.user
-
-            # Fetch YouTube video details
-            youtube_url = form.cleaned_data.get('youtube_url')
-            video_details = fetch_youtube_video_details(youtube_url)
-            if video_details:
-                lecturespace.title = video_details.get('title')
-                # Add tags or other details if needed
-
-            lecturespace.save()
-
-            # Optional: Initiate flashcard generation process
-            # This can be done here or in a background task depending on your app's architecture
-
-            return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
-    else:
-        form = LecturespaceForm()
-
-    return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
-
-
-def create_lecturespace(request):
-    if request.method == 'POST':
-        form = LecturespaceForm(request.POST)
-        if form.is_valid():
-            lecturespace = form.save(commit=False)
-            lecturespace.created_by = request.user
-            lecturespace.save()
-            
-            return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
-    else:
-        form = LecturespaceForm()
-    return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
-'''
 def explore_lecturespaces(request):
     lecturespaces = Lecturespace.objects.all()
     return render(request, 'lecturespaces/explore_lecturespaces.html', {'lecturespaces': lecturespaces})
@@ -154,7 +113,7 @@ def fetch_youtube_video_details(youtube_url):
     if not video_id:
         return None  # Handle cases where the video ID couldn't be extracted
 
-    youtube = build('youtube', 'v3', developerKey='AIzaSyDWgLwvp1jcFMtpurEqm8Wldw8C1MFOEt8')
+    youtube = build('youtube', 'v3', developerKey=os.environ.get('YOUTUBE_API_KEY'))
     request = youtube.videos().list(part="snippet", id=video_id)
     response = request.execute()
 
@@ -183,26 +142,10 @@ def extract_random_sequence(script, sequence_length=10):
     return ' '.join(words[start_index:start_index + sequence_length])
 
 
-"""def make_openai_request(prompt, max_tokens):
-    openai.api_key = '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'
-
-    try:
-        response = openai.Completion.create(
-            model="gpt-3.5-turbo",
-            prompt=prompt,
-            max_tokens=max_tokens,
-            n=1,
-            stop=None,
-            temperature=0.7
-        )
-        return response.choices[0].text.strip()
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return None"""
 
 
 def make_openai_request(prompt, max_tokens):
-   client = openai.OpenAI(api_key='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')
+   client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
    try:
        chat_completion = client.chat.completions.create(
@@ -233,13 +176,7 @@ def create_flashcard_from_sequence(sequence):
             print("Unexpected response format from OpenAI API.")
     return None, None
 
-'''
-def create_flashcard_from_title(title):
-    prompt = f"Create a detailed and informative flashcard based on the following video title: {title}"
-    content = make_openai_request(prompt, 150)
-    return title, content
 
-'''
 def create_flashcard_from_title(title):
     prompt = f"Create a flashcard with a concise title (up to 5 words max) and detailed content (up to 10 words max) based on the following youtube video: {title}. The title could be a Question or some text that reference a concept. The content is the explanation of this concept or answer to the question. Be direct and focus on the content, do not add informative text"
     response_text = make_openai_request(prompt, 100)
@@ -275,9 +212,13 @@ def login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('dashboard')
+            if user.is_staff or user.is_superuser:
+                return redirect('admin')  # Redirect to admin dashboard
+            else:
+                return redirect('user_dashboard')  # Redirect to user dashboard or another page
         else:
-            print("Invalid credentials")
+            messages.error(request, 'Invalid username or password.')
+
     return render(request, 'lecturespaces/login.html')
 
 def logout(request):
@@ -316,7 +257,7 @@ def create_flashcard(request, lecturespace_id):
 def create_and_save_flashcard(request, lecturespace_id):
     if request.method == 'POST':
          # Replace with your actual OpenAI API key
-        client = openai.OpenAI(api_key='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' )
+        client = openai.OpenAI(api_key='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' )
         try:
             lecturespace = get_object_or_404(Lecturespace, id=lecturespace_id)
             prompt = f"Create a flashcard with a concise title (up to 5 words max) and detailed content (up to 10 words max) from any random topic covered in this youtube video:  {lecturespace.title}. The title could be a Question or some text that reference a concept. The content is the explanation of this concept or answer to the question. Be direct and focus on the content, do not add informative text. The format must be this: Title: [title] Content: [content]"
@@ -455,3 +396,105 @@ def check_and_delete_flashcard_if_needed(flashcard):
             flashcard.delete()
             return True  # Indicates the flashcard was deleted
     return False  # Indicates the flashcard was not deleted
+
+
+
+def extract_id(youtube_url):
+    regex_patterns = [
+        r'(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)',
+        r'(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)'
+    ]
+
+    for pattern in regex_patterns:
+        match = re.search(pattern, youtube_url)
+        if match:
+            return match.group(1)
+
+    return None
+
+
+'''
+def create_flashcard_from_title(title):
+    prompt = f"Create a detailed and informative flashcard based on the following video title: {title}"
+    content = make_openai_request(prompt, 150)
+    return title, content
+
+'''
+
+'''
+            for _ in range(5):
+                title, content = create_flashcard_based_on_availability(None, lecturespace.title)
+                if title and content:
+                    Flashcard.objects.create(lecturespace=lecturespace, title=title, content=content)
+
+            return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
+    else:
+        form = LecturespaceForm()
+
+    return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
+
+
+@login_required
+def create_lecturespace(request):
+    """
+    View for creating a new Lecturespace. Handles form submission and
+    fetches video details using the YouTube API.
+
+    :param request: The HTTP request object.
+    :return: The rendered response.
+    """
+    if request.method == 'POST':
+        form = LecturespaceForm(request.POST)
+        if form.is_valid():
+            lecturespace = form.save(commit=False)
+            lecturespace.created_by = request.user
+
+            # Fetch YouTube video details
+            youtube_url = form.cleaned_data.get('youtube_url')
+            video_details = fetch_youtube_video_details(youtube_url)
+            if video_details:
+                lecturespace.title = video_details.get('title')
+                # Add tags or other details if needed
+
+            lecturespace.save()
+
+            # Optional: Initiate flashcard generation process
+            # This can be done here or in a background task depending on your app's architecture
+
+            return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
+    else:
+        form = LecturespaceForm()
+
+    return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
+
+
+def create_lecturespace(request):
+    if request.method == 'POST':
+        form = LecturespaceForm(request.POST)
+        if form.is_valid():
+            lecturespace = form.save(commit=False)
+            lecturespace.created_by = request.user
+            lecturespace.save()
+            
+            return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
+    else:
+        form = LecturespaceForm()
+    return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
+'''
+
+"""def make_openai_request(prompt, max_tokens):
+    openai.api_key = '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'
+
+    try:
+        response = openai.Completion.create(
+            model="gpt-3.5-turbo",
+            prompt=prompt,
+            max_tokens=max_tokens,
+            n=1,
+            stop=None,
+            temperature=0.7
+        )
+        return response.choices[0].text.strip()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None"""

@@ -1,6 +1,9 @@
+{% load youtube_tags %}
+
 <!-- lecturespaces/templates/lecturespaces/lecturespace_detail.html -->
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>{{ lecturespace.title }}</title>
     <!-- Include any CSS or JS here -->
@@ -13,6 +16,7 @@
             border: 1px solid #888;
             width: 80%;
         }
+
         /* The Modal (background) */
         #flashcardCreationModal {
             display: none;
@@ -23,32 +27,43 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgb(0,0,0);
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
         }
     </style>
-    
+
 </head>
+
 <body>
     <ul>
         <li><a href="{% url 'user_dashboard' %}">Personal Space</a></li>
         <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
-      </ul>
+    </ul>
     <h1>{{ lecturespace.title }}</h1>
     <p><strong>Created by:</strong> {{ lecturespace.created_by.username }}</p>
     <p><strong>Created at:</strong> {{ lecturespace.created_at }}</p>
     <p><strong>YouTube URL:</strong> <a href="{{ lecturespace.youtube_url }}">{{ lecturespace.youtube_url }}</a></p>
-    <p><strong>Tags:</strong> 
+
+    {% if lecturespace.youtube_url %}
+    {% extract_id lecturespace.youtube_url as video_id %}
+    {% if video_id %}
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/{{ video_id }}" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>
+    {% endif %}
+    {% endif %}
+
+    <p><strong>Tags:</strong>
         {% for tag in lecturespace.tags.all %}
-            {{ tag.name }}
-            {% if not forloop.last %}, {% endif %}
+        {{ tag.name }}
+        {% if not forloop.last %}, {% endif %}
         {% endfor %}
     </p>
     <form action="{% url 'save_lecturespace' lecturespace.id %}" method="post">
-        {% csrf_token %}
+            {% csrf_token %}
         <button type="submit">Save Lecturespace</button>
     </form>
-    
+
     <form id="flashcard-form" action="{% url 'create_flashcard' lecturespace.id %}" method="post">
         {% csrf_token %}
         <button type="submit">Create Flashcard</button>
@@ -56,29 +71,29 @@
     <h2>Flashcards</h2>
     <ul>
         {% for flashcard in lecturespace.flashcards.all %}
-            <li>
-                <form action="{% url 'save_flashcard' flashcard.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit">Save Flashcard</button>
-                </form>
-                <h3>{{ flashcard.title }}</h3>
-                <p>{{ flashcard.content }}</p>
-                <p>Likes: {{ flashcard.likes }}, Dislikes: {{ flashcard.dislikes }}</p>
-                <!-- Here you can add like/dislike buttons or links -->
-                <form action="{% url 'like_flashcard' flashcard.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit">Like</button>
-                </form>
-                <form action="{% url 'dislike_flashcard' flashcard.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit">Dislike</button>
-                </form>
-            </li>
+        <li>
+            <form action="{% url 'save_flashcard' flashcard.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit">Save Flashcard</button>
+            </form>
+            <h3>{{ flashcard.title }}</h3>
+            <p>{{ flashcard.content }}</p>
+            <p>Likes: {{ flashcard.likes }}, Dislikes: {{ flashcard.dislikes }}</p>
+            <!-- Here you can add like/dislike buttons or links -->
+            <form action="{% url 'like_flashcard' flashcard.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit">Like</button>
+            </form>
+            <form action="{% url 'dislike_flashcard' flashcard.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit">Dislike</button>
+            </form>
+        </li>
         {% empty %}
-            <li>No flashcards available.</li>
+        <li>No flashcards available.</li>
         {% endfor %}
     </ul>
-    
+
     <!-- Add other details or features you want to include, such as a comment section or related Lecturespaces -->
     <div id="flashcardCreationModal" class="modal">
         <!-- Modal content -->
@@ -89,7 +104,7 @@
 
     <!-- JavaScript to handle the modal -->
     <script>
-        document.getElementById('flashcard-form').onsubmit = function() {
+        document.getElementById('flashcard-form').onsubmit = function () {
             document.getElementById('flashcardCreationModal').style.display = 'block';
         };
 
@@ -97,4 +112,5 @@
         // Or rely on page redirection to hide the modal.
     </script>
 </body>
+
 </html>
