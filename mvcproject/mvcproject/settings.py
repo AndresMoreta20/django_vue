@@ -17,6 +17,7 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 from dotenv import load_dotenv
+import dj_database_url
 load_dotenv()
 
 # Now you can get the variable
@@ -28,9 +29,9 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', "False").lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.evniron.get('ALLOWED_HOSTS').split(',')
 
 
 # Application definition
@@ -85,6 +86,9 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+database_url = os.environ.get('DATABASE_URL')
+DATABASES["default"] = dj_database_url.parse(database_url)
 
 
 # Password validation
