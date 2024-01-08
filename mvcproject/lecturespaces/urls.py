@@ -14,6 +14,9 @@ urlpatterns = [
     path('flashcard/save/<int:flashcard_id>/', save_flashcard, name='save_flashcard'),
     path('flashcard/like/<int:flashcard_id>/', like_flashcard, name='like_flashcard'),
     path('flashcard/dislike/<int:flashcard_id>/', dislike_flashcard, name='dislike_flashcard'),
+    path('lecturespace/unsave/<int:lecturespace_id>/', views.unsave_lecturespace, name='unsave_lecturespace'),
+    path('flashcard/unsave/<int:flashcard_id>/', views.unsave_flashcard, name='unsave_flashcard'),
+
 
    # path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     #path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),

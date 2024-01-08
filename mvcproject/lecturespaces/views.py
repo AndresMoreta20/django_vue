@@ -1,7 +1,7 @@
 import os
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from .models import Flashcard, Tag, UserSavedLecturespace, UserSavedFlashcard, Lecturespace
+from .models import Flashcard, FlashcardVote, Tag, UserSavedLecturespace, UserSavedFlashcard, Lecturespace
 from .forms import LecturespaceForm
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
@@ -376,17 +376,42 @@ def save_flashcard(request, flashcard_id):
 @login_required
 def like_flashcard(request, flashcard_id):
     flashcard = get_object_or_404(Flashcard, id=flashcard_id)
-    # Assuming you have fields like `likes` in your Flashcard model
-    flashcard.likes += 1
-    flashcard.save()
+    vote, created = FlashcardVote.objects.get_or_create(user=request.user, flashcard=flashcard, defaults={'like': True})
+    deleted = check_and_delete_flashcard_if_needed(flashcard)
+    if deleted:
+        messages.info(request, "The flashcard has been deleted due to high dislikes.")
+        return redirect('lecturespace_detail', lecturespace_id=flashcard.lecturespace.id)
+    if created:
+        flashcard.likes += 1
+        flashcard.save()
+    elif not vote.like:  # If changing from dislike to like
+        flashcard.likes += 1
+        flashcard.dislikes -= 1
+        flashcard.save()
+        vote.like = True
+        vote.save()
+
     return redirect('lecturespace_detail', lecturespace_id=flashcard.lecturespace.id)
+
 
 @login_required
 def dislike_flashcard(request, flashcard_id):
     flashcard = get_object_or_404(Flashcard, id=flashcard_id)
-    # Assuming you have fields like `dislikes` in your Flashcard model
-    flashcard.dislikes += 1
-    flashcard.save()
+    vote, created = FlashcardVote.objects.get_or_create(user=request.user, flashcard=flashcard, defaults={'like': False})
+    deleted = check_and_delete_flashcard_if_needed(flashcard)
+    if deleted:
+        messages.info(request, "The flashcard has been deleted due to high dislikes.")
+        return redirect('lecturespace_detail', lecturespace_id=flashcard.lecturespace.id)
+    if created:
+        flashcard.dislikes += 1
+        flashcard.save()
+    elif vote.like:  # If changing from like to dislike
+        flashcard.dislikes += 1
+        flashcard.likes -= 1
+        flashcard.save()
+        vote.like = False
+        vote.save()
+
     return redirect('lecturespace_detail', lecturespace_id=flashcard.lecturespace.id)
 
 @login_required
@@ -394,3 +419,39 @@ def save_lecturespace(request, lecturespace_id):
     lecturespace = get_object_or_404(Lecturespace, id=lecturespace_id)
     UserSavedLecturespace.objects.get_or_create(user=request.user, lecturespace=lecturespace)
     return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
+
+@login_required
+def unsave_lecturespace(request, lecturespace_id):
+    lecturespace = get_object_or_404(Lecturespace, id=lecturespace_id)
+
+    try:
+        saved_lecturespace = UserSavedLecturespace.objects.get(user=request.user, lecturespace=lecturespace)
+        saved_lecturespace.delete()
+        messages.success(request, "Lecturespace removed from your saved list.")
+    except UserSavedLecturespace.DoesNotExist:
+        messages.error(request, "This lecturespace is not in your saved list.")
+
+    return redirect('user_dashboard')
+
+@login_required
+def unsave_flashcard(request, flashcard_id):
+    flashcard = get_object_or_404(Flashcard, id=flashcard_id)
+
+    try:
+        saved_flashcard = UserSavedFlashcard.objects.get(user=request.user, flashcard=flashcard)
+        saved_flashcard.delete()
+        messages.success(request, "Flashcard removed from your saved list.")
+    except UserSavedFlashcard.DoesNotExist:
+        messages.error(request, "This flashcard is not in your saved list.")
+
+    return redirect('user_dashboard')
+
+
+def check_and_delete_flashcard_if_needed(flashcard):
+    total_votes = flashcard.likes + flashcard.dislikes
+    if total_votes > 5:
+        dislike_ratio = flashcard.dislikes / total_votes
+        if dislike_ratio >= 0.4:  # 40% or more dislikes
+            flashcard.delete()
+            return True  # Indicates the flashcard was deleted
+    return False  # Indicates the flashcard was not deleted

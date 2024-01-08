@@ -41,3 +41,11 @@ class UserSavedFlashcard(models.Model):
 
     class Meta:
         unique_together = ('user', 'flashcard')
+
+class FlashcardVote(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    flashcard = models.ForeignKey(Flashcard, on_delete=models.CASCADE, related_name='votes')
+    like = models.BooleanField()  # True for like, False for dislike
+
+    class Meta:
+        unique_together = ('user', 'flashcard')
