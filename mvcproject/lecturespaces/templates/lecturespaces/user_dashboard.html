@@ -1,19 +1,34 @@
-<!-- lecturespaces/templates/lecturespaces/user_dashboard.html -->
-<h1>User Dashboard</h1>
-<h2>Saved Lecturespaces</h2>
 <ul>
-  {% for lecturespace in saved_lecturespaces %}
-    <li><a href="{% url 'lecturespace_detail' lecturespace.id %}">{{ lecturespace.title }}</a></li>
-  {% empty %}
-    <li>No saved lecturespaces.</li>
-  {% endfor %}
+  <li><a href="{% url 'user_dashboard' %}">Personal Space</a></li>
+  <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
 </ul>
-<!-- Add similar structure for saved flashcards -->
-<h2>Saved flashcards</h2>
-<ul>
-  {% for flashcard in saved_flashcards %}
-    <li><a href="{% url 'flashcard_detail' flashcard.id %}">{{ flashcard.title }}</a></li>
-  {% empty %}
-    <li>No saved flashcard.</li>
-  {% endfor %}
-</ul>
+{% block content %}
+    <h1>User Dashboard</h1>
+
+    <h2>Saved Lecturespaces</h2>
+    {% if saved_lecturespaces %}
+        <ul>
+            {% for saved in saved_lecturespaces %}
+                <li>
+                    <a href="{% url 'lecturespace_detail' saved.lecturespace.id %}">{{ saved.lecturespace.title }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No saved lecturespaces yet.</p>
+    {% endif %}
+
+    <h2>Saved Flashcards</h2>
+    {% if saved_flashcards %}
+        <ul>
+            {% for saved in saved_flashcards %}
+                <li>
+                    {{ saved.flashcard.title }} - <a href="{% url 'lecturespace_detail' saved.flashcard.lecturespace.id %}">View in Lecturespace</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No saved flashcards yet.</p>
+    {% endif %}
+
+{% endblock %}

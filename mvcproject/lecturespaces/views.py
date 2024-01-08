@@ -20,6 +20,7 @@ from django.contrib.auth.forms import UserCreationForm
 def index(request):
     return render(request, 'index.html')
 
+@login_required
 def user_dashboard(request):
     saved_lecturespaces = UserSavedLecturespace.objects.filter(user=request.user)
     saved_flashcards = UserSavedFlashcard.objects.filter(user=request.user)
@@ -49,7 +50,7 @@ def create_lecturespace(request):
                     tag, created = Tag.objects.get_or_create(name=tag_name)
                     lecturespace.tags.add(tag)
 
-                # Generate and save 5 flashcards using GPT
+                """# Generate and save 5 flashcards using GPT
                 for _ in range(5):
                     flashcard_title, flashcard_content = create_flashcard_from_title(lecturespace.title)
                     if flashcard_title and flashcard_content:
@@ -57,7 +58,7 @@ def create_lecturespace(request):
                             lecturespace=lecturespace, 
                             title=flashcard_title, 
                             content=flashcard_content
-                        )
+                        )"""
 
             # Redirect to the lecturespace detail page
             return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
@@ -310,12 +311,12 @@ def create_flashcard(request, lecturespace_id):
             print("Content:", flashcard.content)
 
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
-
+''''''
 @login_required
 def create_and_save_flashcard(request, lecturespace_id):
     if request.method == 'POST':
          # Replace with your actual OpenAI API key
-        client = openai.OpenAI(api_key='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' )
+        client = openai.OpenAI(api_key='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' )
         try:
             lecturespace = get_object_or_404(Lecturespace, id=lecturespace_id)
             prompt = f"Create a flashcard with a concise title (up to 5 words max) and detailed content (up to 10 words max) based on the following youtube video:  {lecturespace.title}. The title could be a Question or some text that reference a concept. The content is the explanation of this concept or answer to the question. Be direct and focus on the content, do not add informative text. The format must be this: Title: [title] Content: [content]"
@@ -361,6 +362,6 @@ def create_and_save_flashcard(request, lecturespace_id):
 
         except Exception as e:
             print(f"An error occurred: {e}")
-
+    messages.info(request, 'Creating flashcard...')
     # Redirect back to the referring page
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))

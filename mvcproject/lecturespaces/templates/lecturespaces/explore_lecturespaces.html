@@ -1,4 +1,8 @@
 <!-- lecturespaces/templates/lecturespaces/explore_lecturespaces.html -->
+<ul>
+  <li><a href="{% url 'user_dashboard' %}">Personal Space</a></li>
+  <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
+</ul>
 <h1>Explore Lecturespaces</h1>
 <ul>
   {% for lecturespace in lecturespaces %}
