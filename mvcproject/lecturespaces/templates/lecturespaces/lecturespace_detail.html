@@ -16,7 +16,10 @@
             {% if not forloop.last %}, {% endif %}
         {% endfor %}
     </p>
-
+    <form action="{% url 'create_flashcard' lecturespace.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Create Flashcard</button>
+    </form>
     <h2>Flashcards</h2>
     <ul>
         {% for flashcard in lecturespace.flashcards.all %}

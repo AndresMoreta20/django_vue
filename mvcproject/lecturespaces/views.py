@@ -1,5 +1,7 @@
+import os
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from .models import UserSavedLecturespace, UserSavedFlashcard, Lecturespace
+from .models import Flashcard, Tag, UserSavedLecturespace, UserSavedFlashcard, Lecturespace
 from .forms import LecturespaceForm
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
@@ -27,6 +29,90 @@ def user_dashboard(request):
     })
 
 
+@login_required
+def create_lecturespace(request):
+    if request.method == 'POST':
+        form = LecturespaceForm(request.POST)
+        if form.is_valid():
+            lecturespace = form.save(commit=False)
+            lecturespace.created_by = request.user
+
+            # Fetch YouTube video details
+            youtube_url = form.cleaned_data.get('youtube_url')
+            video_details = fetch_youtube_video_details(youtube_url)
+            if video_details:
+                lecturespace.title = video_details.get('title')
+                lecturespace.save()  # Save to generate ID for ManyToMany relation
+
+                # Create tags based on YouTube video details
+                for tag_name in video_details.get('tags', []):
+                    tag, created = Tag.objects.get_or_create(name=tag_name)
+                    lecturespace.tags.add(tag)
+
+                # Generate and save 5 flashcards using GPT
+                for _ in range(5):
+                    flashcard_title, flashcard_content = create_flashcard_from_title(lecturespace.title)
+                    if flashcard_title and flashcard_content:
+                        Flashcard.objects.create(
+                            lecturespace=lecturespace, 
+                            title=flashcard_title, 
+                            content=flashcard_content
+                        )
+
+            # Redirect to the lecturespace detail page
+            return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
+    else:
+        form = LecturespaceForm()
+
+    return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
+
+'''
+            for _ in range(5):
+                title, content = create_flashcard_based_on_availability(None, lecturespace.title)
+                if title and content:
+                    Flashcard.objects.create(lecturespace=lecturespace, title=title, content=content)
+
+            return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
+    else:
+        form = LecturespaceForm()
+
+    return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
+
+
+@login_required
+def create_lecturespace(request):
+    """
+    View for creating a new Lecturespace. Handles form submission and
+    fetches video details using the YouTube API.
+
+    :param request: The HTTP request object.
+    :return: The rendered response.
+    """
+    if request.method == 'POST':
+        form = LecturespaceForm(request.POST)
+        if form.is_valid():
+            lecturespace = form.save(commit=False)
+            lecturespace.created_by = request.user
+
+            # Fetch YouTube video details
+            youtube_url = form.cleaned_data.get('youtube_url')
+            video_details = fetch_youtube_video_details(youtube_url)
+            if video_details:
+                lecturespace.title = video_details.get('title')
+                # Add tags or other details if needed
+
+            lecturespace.save()
+
+            # Optional: Initiate flashcard generation process
+            # This can be done here or in a background task depending on your app's architecture
+
+            return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
+    else:
+        form = LecturespaceForm()
+
+    return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
+
+
 def create_lecturespace(request):
     if request.method == 'POST':
         form = LecturespaceForm(request.POST)
@@ -34,11 +120,12 @@ def create_lecturespace(request):
             lecturespace = form.save(commit=False)
             lecturespace.created_by = request.user
             lecturespace.save()
+            
             return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
     else:
         form = LecturespaceForm()
     return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
-
+'''
 def explore_lecturespaces(request):
     lecturespaces = Lecturespace.objects.all()
     return render(request, 'lecturespaces/explore_lecturespaces.html', {'lecturespaces': lecturespaces})
@@ -95,8 +182,8 @@ def extract_random_sequence(script, sequence_length=10):
     return ' '.join(words[start_index:start_index + sequence_length])
 
 
-def make_openai_request(prompt, max_tokens):
-    openai.api_key = settings.GPT_API_KEY
+"""def make_openai_request(prompt, max_tokens):
+    openai.api_key = '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'
 
     try:
         response = openai.Completion.create(
@@ -110,7 +197,25 @@ def make_openai_request(prompt, max_tokens):
         return response.choices[0].text.strip()
     except Exception as e:
         print(f"An error occurred: {e}")
-        return None
+        return None"""
+
+
+def make_openai_request(prompt, max_tokens):
+   client = openai.OpenAI(api_key='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')
+
+   try:
+       chat_completion = client.chat.completions.create(
+           messages=[
+               {"role": "system", "content": "You are a helpful assistant."},
+               {"role": "user", "content": prompt}
+           ],
+           model="gpt-3.5-turbo",
+           max_tokens=max_tokens
+       )
+       return chat_completion.choices[0].message.content.strip()
+   except Exception as e:
+       print(f"An error occurred: {e}")
+       return None
 
 def create_flashcard_from_sequence(sequence):
     prompt = f"Create a concise flashcard with a title (up to 5 words) and content (up to 10 words) based on the following information:\n\n{sequence}"
@@ -127,10 +232,27 @@ def create_flashcard_from_sequence(sequence):
             print("Unexpected response format from OpenAI API.")
     return None, None
 
+'''
 def create_flashcard_from_title(title):
     prompt = f"Create a detailed and informative flashcard based on the following video title: {title}"
     content = make_openai_request(prompt, 150)
     return title, content
+
+'''
+def create_flashcard_from_title(title):
+    prompt = f"Create a flashcard with a concise title (up to 5 words max) and detailed content (up to 10 words max) based on the following youtube video: {title}. The title could be a Question or some text that reference a concept. The content is the explanation of this concept or answer to the question. Be direct and focus on the content, do not add informative text"
+    response_text = make_openai_request(prompt, 100)
+    if response_text:
+        # Split the response text to separate the title and content
+        parts = response_text.split("\n")
+        if len(parts) >= 2:
+            flashcard_title = parts[0].replace("Title:", "").strip().split()[:5]
+            flashcard_content = parts[1].replace("Content:", "").strip().split()[:50]
+            return ' '.join(flashcard_title), ' '.join(flashcard_content)
+        else:
+            print("Unexpected response format from OpenAI API.")
+    return None, None
+
 
 def create_flashcard_based_on_availability(script, video_title):
     if script:
@@ -143,38 +265,7 @@ def create_flashcard_based_on_availability(script, video_title):
 def home(request):
     return render(request, 'lecturespaces/home.html')
 
-@login_required
-def create_lecturespace(request):
-    """
-    View for creating a new Lecturespace. Handles form submission and
-    fetches video details using the YouTube API.
 
-    :param request: The HTTP request object.
-    :return: The rendered response.
-    """
-    if request.method == 'POST':
-        form = LecturespaceForm(request.POST)
-        if form.is_valid():
-            lecturespace = form.save(commit=False)
-            lecturespace.created_by = request.user
-
-            # Fetch YouTube video details
-            youtube_url = form.cleaned_data.get('youtube_url')
-            video_details = fetch_youtube_video_details(youtube_url)
-            if video_details:
-                lecturespace.title = video_details.get('title')
-                # Add tags or other details if needed
-
-            lecturespace.save()
-
-            # Optional: Initiate flashcard generation process
-            # This can be done here or in a background task depending on your app's architecture
-
-            return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)
-    else:
-        form = LecturespaceForm()
-
-    return render(request, 'lecturespaces/create_lecturespace.html', {'form': form})
 
 def login(request):
     if request.method == 'POST':
@@ -201,3 +292,75 @@ def signup(request):
     else:
         form = UserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
+
+@login_required
+def create_flashcard(request, lecturespace_id):
+    lecturespace = get_object_or_404(Lecturespace, id=lecturespace_id)
+
+    if request.method == 'POST':
+        flashcard_title, flashcard_content = create_flashcard_from_title(lecturespace.title)
+        if flashcard_title and flashcard_content:
+            flashcard = Flashcard.objects.create(
+                lecturespace=lecturespace,
+                title=flashcard_title,
+                content=flashcard_content
+            )
+            print(f"Flashcard created successfully.")
+            print("Title:", flashcard.title)
+            print("Content:", flashcard.content)
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
+
+@login_required
+def create_and_save_flashcard(request, lecturespace_id):
+    if request.method == 'POST':
+         # Replace with your actual OpenAI API key
+        client = openai.OpenAI(api_key='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' )
+        try:
+            lecturespace = get_object_or_404(Lecturespace, id=lecturespace_id)
+            prompt = f"Create a flashcard with a concise title (up to 5 words max) and detailed content (up to 10 words max) based on the following youtube video:  {lecturespace.title}. The title could be a Question or some text that reference a concept. The content is the explanation of this concept or answer to the question. Be direct and focus on the content, do not add informative text. The format must be this: Title: [title] Content: [content]"
+            #prompt = f"Create a flashcard with a concise title and detailed content based on the following YouTube video: {lecturespace.title}."
+            chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            model="gpt-3.5-turbo",
+            max_tokens=100
+            )
+            response_text = chat_completion.choices[0].message.content.strip()
+
+            if response_text:
+                # Split the response by lines
+                lines = response_text.split("\n")
+
+                # Initialize variables for the flashcard title and content
+                flashcard_title = ""
+                flashcard_content = ""
+
+                # Loop through the lines to find and extract Title and Content
+                for line in lines:
+                    if line.startswith("Title:"):
+                        flashcard_title = line.replace("Title:", "").strip()
+                    elif line.startswith("Content:"):
+                        flashcard_content = line.replace("Content:", "").strip()
+
+                # Check if both title and content were found
+                if flashcard_title and flashcard_content:
+                    # Create the flashcard
+                    Flashcard.objects.create(
+                        lecturespace=lecturespace,
+                        title=flashcard_title,
+                        content=flashcard_content
+                    )
+                    print("Flashcard created successfully.")
+                else:
+                    print("Error: Title and Content not found in the response text.")
+            else:
+                print("Error: Response text is empty.")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+    # Redirect back to the referring page
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
