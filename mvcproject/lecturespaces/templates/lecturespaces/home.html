@@ -1,0 +1,19 @@
+<!-- lecturespaces/templates/lecturespaces/home.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <!-- Add CSS for styling if needed -->
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'user_dashboard' %}">Personal Space</a></li>
+            <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>  <!-- Logout link -->
+        </ul>
+    </nav>
+    <h1>Welcome to Lecturespaces</h1>
+    <!-- Content of the home page -->
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecturespaces</title>
+    <!-- Add your CSS files here -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">  <!-- Example CSS file -->
+</head>
+<body>
+    <header>
+        <nav>
+            <!-- Navigation bar content -->
+            <ul>
+                <li><a href="{% url 'index' %}">Home</a></li>
+                <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'user_dashboard' %}">Dashboard</a></li>
+                    <li><a href="{% url 'create_lecturespace' %}">Create Lecturespace</a></li>
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    <li><a href="{% url 'signup' %}">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        {% block content %}
+        <h1>Lecturespaces</h1>
+        <p>Welcome to Lecturespaces!</p>
+        {% endblock %}
+    </main>
+
+    <footer>
+        <!-- Footer content -->
+        <p>© 2024 Lecturespaces. All rights reserved.</p>
+    </footer>
+
+    <!-- Add your JavaScript files here -->
+    <script src="{% static 'js/script.js' %}"></script>  <!-- Example JS file -->
+</body>
+</html>

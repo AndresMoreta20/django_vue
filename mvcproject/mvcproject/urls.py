@@ -16,10 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from lecturespaces.views import index
+from lecturespaces.views import index, login
+from django.contrib.auth import views as auth_views
+from lecturespaces.views import signup
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
-    path('', index),
+    path('admin/', admin.site.urls),
     path('lecturespaces/', include('lecturespaces.urls')),
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    path('signup/', signup, name='signup'),
+    # Add other project-level URL patterns here
 ]
