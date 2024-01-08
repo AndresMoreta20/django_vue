@@ -316,10 +316,10 @@ def create_flashcard(request, lecturespace_id):
 def create_and_save_flashcard(request, lecturespace_id):
     if request.method == 'POST':
          # Replace with your actual OpenAI API key
-        client = openai.OpenAI(api_key='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' )
+        client = openai.OpenAI(api_key='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' )
         try:
             lecturespace = get_object_or_404(Lecturespace, id=lecturespace_id)
-            prompt = f"Create a flashcard with a concise title (up to 5 words max) and detailed content (up to 10 words max) based on the following youtube video:  {lecturespace.title}. The title could be a Question or some text that reference a concept. The content is the explanation of this concept or answer to the question. Be direct and focus on the content, do not add informative text. The format must be this: Title: [title] Content: [content]"
+            prompt = f"Create a flashcard with a concise title (up to 5 words max) and detailed content (up to 10 words max) from any random topic covered in this youtube video:  {lecturespace.title}. The title could be a Question or some text that reference a concept. The content is the explanation of this concept or answer to the question. Be direct and focus on the content, do not add informative text. The format must be this: Title: [title] Content: [content]"
             #prompt = f"Create a flashcard with a concise title and detailed content based on the following YouTube video: {lecturespace.title}."
             chat_completion = client.chat.completions.create(
             messages=[
@@ -327,7 +327,8 @@ def create_and_save_flashcard(request, lecturespace_id):
                 {"role": "user", "content": prompt}
             ],
             model="gpt-3.5-turbo",
-            max_tokens=100
+            max_tokens=100,
+            temperature=1
             )
             response_text = chat_completion.choices[0].message.content.strip()
 
@@ -365,3 +366,31 @@ def create_and_save_flashcard(request, lecturespace_id):
     messages.info(request, 'Creating flashcard...')
     # Redirect back to the referring page
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
+
+@login_required
+def save_flashcard(request, flashcard_id):
+    flashcard = get_object_or_404(Flashcard, id=flashcard_id)
+    UserSavedFlashcard.objects.get_or_create(user=request.user, flashcard=flashcard)
+    return redirect('lecturespace_detail', lecturespace_id=flashcard.lecturespace.id)
+
+@login_required
+def like_flashcard(request, flashcard_id):
+    flashcard = get_object_or_404(Flashcard, id=flashcard_id)
+    # Assuming you have fields like `likes` in your Flashcard model
+    flashcard.likes += 1
+    flashcard.save()
+    return redirect('lecturespace_detail', lecturespace_id=flashcard.lecturespace.id)
+
+@login_required
+def dislike_flashcard(request, flashcard_id):
+    flashcard = get_object_or_404(Flashcard, id=flashcard_id)
+    # Assuming you have fields like `dislikes` in your Flashcard model
+    flashcard.dislikes += 1
+    flashcard.save()
+    return redirect('lecturespace_detail', lecturespace_id=flashcard.lecturespace.id)
+
+@login_required
+def save_lecturespace(request, lecturespace_id):
+    lecturespace = get_object_or_404(Lecturespace, id=lecturespace_id)
+    UserSavedLecturespace.objects.get_or_create(user=request.user, lecturespace=lecturespace)
+    return redirect('lecturespace_detail', lecturespace_id=lecturespace.id)

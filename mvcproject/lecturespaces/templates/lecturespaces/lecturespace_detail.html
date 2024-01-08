@@ -44,6 +44,10 @@
             {% if not forloop.last %}, {% endif %}
         {% endfor %}
     </p>
+    <form action="{% url 'save_lecturespace' lecturespace.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Save Lecturespace</button>
+    </form>
     
     <form id="flashcard-form" action="{% url 'create_flashcard' lecturespace.id %}" method="post">
         {% csrf_token %}
@@ -53,10 +57,22 @@
     <ul>
         {% for flashcard in lecturespace.flashcards.all %}
             <li>
+                <form action="{% url 'save_flashcard' flashcard.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">Save Flashcard</button>
+                </form>
                 <h3>{{ flashcard.title }}</h3>
                 <p>{{ flashcard.content }}</p>
                 <p>Likes: {{ flashcard.likes }}, Dislikes: {{ flashcard.dislikes }}</p>
                 <!-- Here you can add like/dislike buttons or links -->
+                <form action="{% url 'like_flashcard' flashcard.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">Like</button>
+                </form>
+                <form action="{% url 'dislike_flashcard' flashcard.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">Dislike</button>
+                </form>
             </li>
         {% empty %}
             <li>No flashcards available.</li>
