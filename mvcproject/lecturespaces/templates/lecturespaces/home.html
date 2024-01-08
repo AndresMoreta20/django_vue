@@ -3,17 +3,59 @@
 <html>
 <head>
     <title>Home</title>
-    <!-- Add CSS for styling if needed -->
+    <style>
+        /* Basic styles for modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="{% url 'user_dashboard' %}">Personal Space</a></li>
-            <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
-            <li><a href="{% url 'logout' %}">Logout</a></li>  <!-- Logout link -->
-        </ul>
-    </nav>
+    <ul>
+        <li><a href="{% url 'user_dashboard' %}">Personal Space</a></li>
+        <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
+    </ul>
+
     <h1>Welcome to Lecturespaces</h1>
-    <!-- Content of the home page -->
+
+    <form id="lecturespace-form" method="post" action="{% url 'create_lecturespace' %}">
+        {% csrf_token %}
+        <label for="youtube_url">YouTube URL:</label>
+        <input type="url" id="youtube_url" name="youtube_url" required>
+        <button type="submit">Create Lecturespace</button>
+    </form>
+
+    <!-- Modal -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <p>Creating Lecturespace...</p>
+        </div>
+    </div>
+
+    <!-- JavaScript to handle the modal -->
+    <script>
+        document.getElementById('lecturespace-form').onsubmit = function() {
+            document.getElementById('loadingModal').style.display = 'block';
+        };
+
+        // You can use AJAX to submit the form and hide the modal once the response is received.
+        // Or rely on page redirection to hide the modal.
+    </script>
 </body>
 </html>

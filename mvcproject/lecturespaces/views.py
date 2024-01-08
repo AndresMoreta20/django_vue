@@ -66,7 +66,7 @@ def fetch_youtube_video_details(youtube_url):
     if not video_id:
         return None  # Handle cases where the video ID couldn't be extracted
 
-    youtube = build('youtube', 'v3', developerKey=settings.YOUTUBE_API_KEY)
+    youtube = build('youtube', 'v3', developerKey='AIzaSyDWgLwvp1jcFMtpurEqm8Wldw8C1MFOEt8')
     request = youtube.videos().list(part="snippet", id=video_id)
     response = request.execute()
 
