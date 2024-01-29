@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import os
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -43,10 +44,7 @@ MIDDLEWARE = [
 ]
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(default=os.environ.get('postgres://api_database_fkxe_user:Xns2OnL587TwFhWLYSWplfzWOiJnH3nO@dpg-cmrq4r7109ks73fjknl0-a.oregon-postgres.render.com/api_database_fkxe'))
 }
 
 TEMPLATES = [
