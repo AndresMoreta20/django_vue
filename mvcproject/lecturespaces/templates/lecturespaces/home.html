@@ -1,37 +1,6 @@
-<!-- lecturespaces/templates/lecturespaces/home.html -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Home</title>
-    <style>
-        /* Basic styles for modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <ul>
-        <li><a href="{% url 'user_dashboard' %}">Personal Space</a></li>
-        <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
-    </ul>
+{% extends "base.html" %}
 
+{% block content %}
     <h1>Welcome to Lecturespaces</h1>
 
     <form id="lecturespace-form" method="post" action="{% url 'create_lecturespace' %}">
@@ -54,8 +23,6 @@
             document.getElementById('loadingModal').style.display = 'block';
         };
 
-        // You can use AJAX to submit the form and hide the modal once the response is received.
-        // Or rely on page redirection to hide the modal.
+        // Additional JS for AJAX or redirection can be added here.
     </script>
-</body>
-</html>
+{% endblock %}

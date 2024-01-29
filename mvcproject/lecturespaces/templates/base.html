@@ -1,44 +1,37 @@
+<!-- templates/base.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
+    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturespaces</title>
-    <!-- Add your CSS files here -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">  <!-- Example CSS file -->
+    <title>{% block title %}My Site{% endblock %}</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    </style>
 </head>
 <body>
     <header>
-        <nav>
-            <!-- Navigation bar content -->
-            <ul>
-                <li><a href="{% url 'index' %}">Home</a></li>
-                <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
-                {% if user.is_authenticated %}
-                    <li><a href="{% url 'user_dashboard' %}">Dashboard</a></li>
-                    <li><a href="{% url 'create_lecturespace' %}">Create Lecturespace</a></li>
-                    <li><a href="{% url 'logout' %}">Logout</a></li>
-                {% else %}
-                    <li><a href="{% url 'login' %}">Login</a></li>
-                    <li><a href="{% url 'signup' %}">Sign Up</a></li>
-                {% endif %}
-            </ul>
-        </nav>
+        <!-- Your navbar code goes here -->
+        <ul class="navbar">
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li><a href="{% url 'user_dashboard' %}">Personal Space</a></li>
+            <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
+            
+            
+            {% if user.is_authenticated %}
+            <li class="logout"><a href="{% url 'account_logout' %}">Logout</a></li>
+        {% else %}
+            <li class="logout"><a href="{% url 'account_login' %}">Login</a></li>
+        {% endif %}
+        </ul>
     </header>
-    
+
     <main>
         {% block content %}
-        <h1>Lecturespaces</h1>
-        <p>Welcome to Lecturespaces!</p>
+        <!-- Page specific content will go here -->
         {% endblock %}
     </main>
 
     <footer>
-        <!-- Footer content -->
-        <p>© 2024 Lecturespaces. All rights reserved.</p>
+        <!-- Footer content goes here -->
     </footer>
-
-    <!-- Add your JavaScript files here -->
-    <script src="{% static 'js/script.js' %}"></script>  <!-- Example JS file -->
 </body>
 </html>

@@ -1,4 +1,6 @@
-<!-- lecturespaces/templates/lecturespaces/explore_lecturespaces.html -->
+{% extends "base.html" %}
+
+{% block content %}
 <ul>
   <li><a href="{% url 'user_dashboard' %}">Personal Space</a></li>
   <li><a href="{% url 'explore_lecturespaces' %}">Explore</a></li>
@@ -9,3 +11,4 @@
     <li><a href="{% url 'lecturespace_detail' lecturespace.id %}">{{ lecturespace.title }}</a></li>
   {% endfor %}
 </ul>
+{% endblock %}

@@ -29,9 +29,9 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', "False").lower() == 'true'
+DEBUG = True
 
-ALLOWED_HOSTS = os.evniron.get('ALLOWED_HOSTS').split(',')
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -43,8 +43,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'lecturespaces',
+   # 'lecturespaces',
+    'mvcapi',
+    'rest_framework',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'corsheaders',
 ]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -54,10 +70,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'mvcproject.urls'
-
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Asume que React se ejecuta en localhost:3000
+]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -87,8 +108,8 @@ DATABASES = {
     }
 }
 
-database_url = os.environ.get('DATABASE_URL')
-DATABASES["default"] = dj_database_url.parse(database_url)
+#database_url = os.environ.get('DATABASE_URL')
+#DATABASES["default"] = dj_database_url.parse(database_url)
 
 
 # Password validation

@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tags</title>
+</head>
+<body>
+    <h1>Ranking</h1>
+
+    <form method="post" action="{% url 'date_tags' %}">
+        {% csrf_token %}
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" required>
+
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" required>
+
+        <button type="submit">Check Tags</button>
+    </form>
+
+    {% if tags %}
+        <h2>Tag Rankings</h2>
+        <ul>
+            {% for tag, count in tags %}
+                <li>{{ tag }}: {{ count }}</li>
+            {% empty %}
+                <li>No tags found.</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>

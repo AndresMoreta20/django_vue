@@ -16,16 +16,24 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from lecturespaces.views import index, login
+#from lecturespaces.views import index, login
 from django.contrib.auth import views as auth_views
-from lecturespaces.views import signup
+#from lecturespaces.views import signup
 
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
-    path('lecturespaces/', include('lecturespaces.urls')),
-    path('', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+  #  path('', include('lecturespaces.urls')),
+
+    # Using django-allauth for authentication
+    path('accounts/', include('allauth.urls')),
+
+    # If you still want to use your custom signup view
+  #  path('signup/', signup, name='signup'),
+
+    # If you need custom logout view
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('signup/', signup, name='signup'),
+
+    path('api/', include('mvcapi.urls')),  
+
     # Add other project-level URL patterns here
 ]

@@ -4,9 +4,6 @@ from django.conf import settings
 class Tag(models.Model):
     name = models.CharField(max_length=100)
 
-    class Meta:
-        app_label = 'lecturespaces'
-
     def __str__(self):
         return self.name
     
@@ -16,9 +13,6 @@ class Lecturespace(models.Model):
     tags = models.ManyToManyField(Tag)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
-    class Meta:
-        app_label = 'lecturespaces'
 
     def __str__(self):
         return self.title
@@ -30,29 +24,23 @@ class Flashcard(models.Model):
     lecturespace = models.ForeignKey(Lecturespace, on_delete=models.CASCADE, related_name='flashcards')
     likes = models.PositiveIntegerField(default=0)
     dislikes = models.PositiveIntegerField(default=0)
-    class Meta:
-        app_label = 'lecturespaces'
+
     def __str__(self):
         return f"Flashcard for {self.lecturespace.title}"
 
 class UserSavedLecturespace(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     lecturespace = models.ForeignKey(Lecturespace, on_delete=models.CASCADE)
-    
 
     class Meta:
-        app_label = 'lecturespaces'
-    #class Meta:
-     #   unique_together = ('user', 'lecturespace')
+        unique_together = ('user', 'lecturespace')
 
 class UserSavedFlashcard(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     flashcard = models.ForeignKey(Flashcard, on_delete=models.CASCADE)
 
     class Meta:
-        app_label = 'lecturespaces'
-    #class Meta:
-     #   unique_together = ('user', 'flashcard')
+        unique_together = ('user', 'flashcard')
 
 class FlashcardVote(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -60,6 +48,14 @@ class FlashcardVote(models.Model):
     like = models.BooleanField()  # True for like, False for dislike
 
     class Meta:
-        app_label = 'lecturespaces'
-    #class Meta:
-    #    unique_together = ('user', 'flashcard')
+        unique_together = ('user', 'flashcard')
+
+class StudySession(models.Model):
+    total_flashcards = models.IntegerField(default=0)
+    remembered = models.IntegerField(default=0)
+    forgotten = models.IntegerField(default=0)
+    suggestions = models.TextField()
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return f"Study Session {self.id}"
